@@ -1,0 +1,82 @@
+<style>
+    body {
+        margin: 0;
+        position: relative;
+    }
+
+    a {
+        color: teal;
+        padding: 20px;
+        cursor: hand;
+    }
+</style>
+
+<body>
+    <img src="{{ image_url }}"/>
+    <canvas
+            id="canvas"
+            style="position: absolute; left: 0; top: 0; cursor: crosshair"
+            width=1000 height=1000
+            onclick="handleClick(event)"
+            onmousemove="handleMouseMove(event)">
+    </canvas>
+    <div style='padding: 20px; float: right; font-size: 30px; font-family: "Roboto", "Lucida Grande", Verdana, Arial, sans-serif'>
+        <div>
+            <a href="{{next}}">Next Image</a>
+        </div>
+        <div style="margin-top: 20px;">
+            <a onclick="sendData()">Save Data</a>
+        </div>
+    </div>
+</body>
+
+<script>
+    var canvas = document.getElementById('canvas');
+    var context = canvas.getContext('2d');
+
+    var origin = null;
+    var lastSavedThing = null;
+
+    function sendData() {
+        lastSavedThing.name = "{{ current }}";
+        var xhReq = new XMLHttpRequest();
+        xhReq.open('POST', "{{ current }}", true);
+        xhReq.setRequestHeader('Content-Type', 'application/json');
+        xhReq.onreadystatechange = function() {
+            window.location = "{{ next }}";
+        };
+        xhReq.send(JSON.stringify(lastSavedThing));
+    }
+
+    function handleMouseMove(event) {
+        if (origin === null) return;
+        var final = {x: event.clientX, y: event.clientY};
+        context.clearRect(0, 0, canvas.width, canvas.height);
+
+        context.beginPath();
+        context.fillStyle = 'rgba(0, 0, 0, 0.3)';
+        context.strokeStyle = 'black';
+        context.moveTo(origin.x, origin.y);
+        context.lineTo(final.x, origin.y);
+        context.lineTo(final.x, final.y);
+        context.lineTo(origin.x, final.y);
+        context.lineTo(origin.x, origin.y);
+        context.fill();
+        context.stroke();
+    }
+
+    function handleClick(event) {
+        var point = {x: event.clientX, y: event.clientY};
+        if (origin === null) {
+            origin = point;
+        } else {
+            lastSavedThing = {
+                x: origin.x,
+                y: origin.y,
+                width: point.x - origin.x,
+                height: point.y - origin.y
+            };
+            origin = null;
+        }
+    }
+</script>
